@@ -1,0 +1,188 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  padding: 6px 8px 8px;
+}
+
+.tabs {
+  flex-shrink: 0;
+  margin: 0;
+}
+
+.panel {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.panelBody {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.group {
+  margin: 0 0 8px;
+  padding: 6px 8px 8px;
+}
+
+.group :global(.field-row) + :global(.field-row) {
+  margin-top: 4px;
+}
+
+.sliderRow {
+  padding-left: 20px;
+}
+
+.sliderLabel {
+  width: 68px;
+  flex-shrink: 0;
+}
+
+.sliderEnd {
+  width: 32px;
+  flex-shrink: 0;
+  color: #222;
+  text-align: center;
+}
+
+.slider {
+  flex: 1;
+  min-width: 60px;
+}
+
+.hint {
+  margin: 0 0 6px 68px;
+  color: #444;
+}
+
+.sliderRow:has(input:disabled) .sliderLabel,
+.sliderRow:has(input:disabled) .sliderEnd {
+  color: grey;
+  text-shadow: 1px 1px #fff;
+}
+
+.restoreRow {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.buttons {
+  display: flex;
+  flex-shrink: 0;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.monitor {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 2px auto 10px;
+}
+
+.case {
+  position: relative;
+  padding: 10px 10px 16px;
+  background: #c8c3b0;
+  border: 1px solid #000;
+  border-radius: 4px;
+  box-shadow: inset -2px -2px #8a8572, inset 2px 2px #f2efe2;
+}
+
+.screen {
+  position: relative;
+  width: 164px;
+  height: 108px;
+  overflow: hidden;
+  border-radius: var(--preview-radius);
+  background: teal;
+  box-shadow: 0 0 0 1px #000;
+}
+
+.led {
+  position: absolute;
+  right: 12px;
+  bottom: 5px;
+  width: 5px;
+  height: 3px;
+  background: #3c3;
+  box-shadow: 0 0 0 1px #000;
+}
+
+.miniIcon {
+  position: absolute;
+  left: 8px;
+  width: 10px;
+  height: 10px;
+  background: #ffc90e;
+  box-shadow: 0 0 0 1px #000;
+}
+
+.miniIcon:nth-child(1) {
+  top: 8px;
+}
+
+.miniIcon:nth-child(2) {
+  top: 28px;
+  background: #fff;
+}
+
+.miniWindow {
+  position: absolute;
+  left: 38px;
+  top: 14px;
+  width: 86px;
+  height: 56px;
+  background: silver;
+  box-shadow: inset -1px -1px #000, inset 1px 1px #fff;
+  filter: drop-shadow(var(--preview-rgb) 0 0 rgba(0, 255, 255, 0.6))
+    drop-shadow(calc(var(--preview-rgb) * -1) 0 0 rgba(255, 0, 60, 0.6));
+}
+
+.miniTitle {
+  height: 8px;
+  margin: 2px;
+  background: linear-gradient(90deg, navy, #1084d0);
+}
+
+.miniTaskbar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 8px;
+  background: silver;
+  box-shadow: inset 0 1px #fff;
+}
+
+.previewLines {
+  position: absolute;
+  inset: 0;
+  opacity: var(--preview-scan);
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.5) 0 1px,
+    rgba(255, 40, 120, 0.15) 1px 2px,
+    transparent 2px 3px
+  );
+}
+
+.previewVignette {
+  position: absolute;
+  inset: 0;
+  opacity: var(--preview-vignette);
+  background: radial-gradient(ellipse at center, transparent 40%, rgba(0, 0, 0, 0.85) 100%);
+}
+
+.stand {
+  width: 60px;
+  height: 10px;
+  background: #c8c3b0;
+  border: 1px solid #000;
+  border-top: 0;
+  clip-path: polygon(15% 0, 85% 0, 100% 100%, 0 100%);
+}

@@ -4,6 +4,7 @@ import { useCallback, useRef, type PointerEvent } from "react";
 import { getApp } from "@/apps/registry";
 import { getNode } from "@/content/vfs";
 import { useWindowManager } from "@/os/WindowManager";
+import { uiScale } from "@/os/scale";
 import type { OsWindow } from "@/os/types";
 
 type WindowFrameProps = {
@@ -21,10 +22,14 @@ export function WindowFrame({ win }: WindowFrameProps) {
     resizeWindow,
     setWindowFile,
   } = useWindowManager();
-  const drag = useRef<{ offsetX: number; offsetY: number } | null>(null);
-  const resize = useRef<{ startX: number; startY: number; width: number; height: number } | null>(
-    null,
-  );
+  const drag = useRef<{ scale: number; offsetX: number; offsetY: number } | null>(null);
+  const resize = useRef<{
+    scale: number;
+    startX: number;
+    startY: number;
+    width: number;
+    height: number;
+  } | null>(null);
   const app = getApp(win.appId);
   const visible = win.mode !== "minimized";
   const active = focusedId === win.id && visible;
@@ -45,20 +50,19 @@ export function WindowFrame({ win }: WindowFrameProps) {
 
     if (maximized) return;
 
+    const scale = uiScale();
     drag.current = {
-      offsetX: event.clientX - win.x,
-      offsetY: event.clientY - win.y,
+      scale,
+      offsetX: event.clientX / scale - win.x,
+      offsetY: event.clientY / scale - win.y,
     };
     event.currentTarget.setPointerCapture(event.pointerId);
   };
 
   const onTitlePointerMove = (event: PointerEvent<HTMLDivElement>) => {
     if (!drag.current) return;
-    moveWindow(
-      win.id,
-      event.clientX - drag.current.offsetX,
-      event.clientY - drag.current.offsetY,
-    );
+    const { scale, offsetX, offsetY } = drag.current;
+    moveWindow(win.id, event.clientX / scale - offsetX, event.clientY / scale - offsetY);
   };
 
   const onTitlePointerUp = (event: PointerEvent<HTMLDivElement>) => {
@@ -73,6 +77,7 @@ export function WindowFrame({ win }: WindowFrameProps) {
     event.stopPropagation();
     focusWindow(win.id);
     resize.current = {
+      scale: uiScale(),
       startX: event.clientX,
       startY: event.clientY,
       width: win.width,
@@ -83,10 +88,11 @@ export function WindowFrame({ win }: WindowFrameProps) {
 
   const onGripPointerMove = (event: PointerEvent<HTMLDivElement>) => {
     if (!resize.current) return;
+    const { scale, startX, startY, width, height } = resize.current;
     resizeWindow(
       win.id,
-      resize.current.width + event.clientX - resize.current.startX,
-      resize.current.height + event.clientY - resize.current.startY,
+      width + (event.clientX - startX) / scale,
+      height + (event.clientY - startY) / scale,
     );
   };
 

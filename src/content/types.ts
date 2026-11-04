@@ -60,6 +60,8 @@ export type LinkNode = Base & {
   description?: string;
   stack?: string[];
   repo?: string;
+  embeddable?: boolean;
+  preview?: string;
 };
 
 export type VfsNode = FolderNode | DocumentNode | VideoNode | AudioNode | LinkNode;

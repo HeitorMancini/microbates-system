@@ -10,6 +10,7 @@ import {
 } from "react";
 import { getApp, resolveAppForNode, windowTitle } from "@/apps/registry";
 import { getNode } from "@/content/vfs";
+import { viewportSize } from "@/os/scale";
 import type { AppDefinition, Bounds, OsWindow } from "@/os/types";
 
 const TASKBAR_HEIGHT = 32;
@@ -41,8 +42,9 @@ function clampPosition(x: number, y: number, width: number, height: number): Bou
     return { x, y, width, height };
   }
 
-  const maxX = Math.max(0, window.innerWidth - 80);
-  const maxY = Math.max(0, window.innerHeight - TASKBAR_HEIGHT - 28);
+  const viewport = viewportSize();
+  const maxX = Math.max(0, viewport.width - 80);
+  const maxY = Math.max(0, viewport.height - TASKBAR_HEIGHT - 28);
   return {
     x: Math.min(Math.max(-width + 80, x), maxX),
     y: Math.min(Math.max(0, y), maxY),
@@ -52,12 +54,10 @@ function clampPosition(x: number, y: number, width: number, height: number): Bou
 }
 
 function desktopSize(): { width: number; height: number } {
-  if (typeof window === "undefined") {
-    return { width: 1024, height: 768 };
-  }
+  const viewport = viewportSize();
   return {
-    width: window.innerWidth,
-    height: window.innerHeight - TASKBAR_HEIGHT,
+    width: viewport.width,
+    height: viewport.height - TASKBAR_HEIGHT,
   };
 }
 
@@ -121,11 +121,14 @@ function osReducer(state: OsState, action: OsAction): OsState {
       const origin = cascadeOrigin(state.windows.length);
       const nextZ = state.nextZ + 1;
       const id = `${app.id}-${nextZ}`;
+      const desk = desktopSize();
+      const width = Math.min(app.defaultSize.width, desk.width);
+      const height = Math.min(app.defaultSize.height, desk.height);
       const bounds = clampPosition(
-        origin.x,
-        origin.y,
-        app.defaultSize.width,
-        app.defaultSize.height,
+        Math.max(0, Math.min(origin.x, desk.width - width)),
+        Math.max(0, Math.min(origin.y, desk.height - height)),
+        width,
+        height,
       );
       const maximize = isCoarsePointer() && app.resizable !== false;
       const win: OsWindow = {
@@ -341,11 +344,6 @@ export function WindowManagerProvider({ children }: { children: ReactNode }) {
   const openFile = useCallback((fileId: string) => {
     const node = getNode(fileId);
     if (!node) return;
-    if (node.kind === "link") {
-      window.open(node.url, "_blank", "noopener,noreferrer");
-      dispatch({ type: "setStartMenu", open: false });
-      return;
-    }
     const app = resolveAppForNode(node);
     if (app) dispatch({ type: "open", appId: app.id, fileId });
   }, []);

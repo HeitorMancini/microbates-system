@@ -13,6 +13,12 @@ const SoundRecorder = dynamic<AppProps>(() =>
 const VideoPlayer = dynamic<AppProps>(() =>
   import("./video-player/VideoPlayer").then((m) => m.VideoPlayer),
 );
+const ControlPanel = dynamic<AppProps>(() =>
+  import("./control-panel/ControlPanel").then((m) => m.ControlPanel),
+);
+const InternetExplorer = dynamic<AppProps>(() =>
+  import("./internet-explorer/InternetExplorer").then((m) => m.InternetExplorer),
+);
 
 export const APPS: AppDefinition[] = [
   {
@@ -88,6 +94,31 @@ export const APPS: AppDefinition[] = [
     instancing: "single",
     formatTitle: () => "Prompt do MS-DOS",
     component: Terminal,
+  },
+  {
+    id: "control-panel",
+    title: "Painel de Controle",
+    exe: "CONTROL.EXE",
+    icon: "/icons/control-panel.svg",
+    defaultSize: { width: 400, height: 470 },
+    minSize: { width: 340, height: 300 },
+    resizable: true,
+    instancing: "single",
+    formatTitle: () => "Painel de Controle",
+    component: ControlPanel,
+  },
+  {
+    id: "internet-explorer",
+    title: "Internet Explorer",
+    exe: "IEXPLORE.EXE",
+    icon: "/icons/ie.svg",
+    defaultSize: { width: 640, height: 500 },
+    minSize: { width: 360, height: 280 },
+    resizable: true,
+    instancing: "perFile",
+    handles: ["link"],
+    formatTitle: (file) => `${file.name} - Microsoft Internet Explorer`,
+    component: InternetExplorer,
   },
 ];
 
