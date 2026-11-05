@@ -96,6 +96,139 @@
   border-bottom: 1px solid #fff;
 }
 
+.popupMenu {
+  position: absolute;
+  min-width: 150px;
+  margin: 0;
+  padding: 2px;
+  list-style: none;
+  background: silver;
+  box-shadow: inset -1px -1px #0a0a0a, inset 1px 1px #dfdfdf, inset -2px -2px grey,
+    inset 2px 2px #fff;
+  font-size: 11px;
+  animation: menu-unroll 100ms steps(4);
+}
+
+.submenu {
+  left: calc(100% - 3px);
+  top: -3px;
+  z-index: 1;
+}
+
+.startList {
+  flex: 1;
+  margin: 0;
+  padding: 2px;
+  list-style: none;
+}
+
+.popupItemRoot {
+  position: relative;
+}
+
+.popupItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  min-width: unset;
+  min-height: unset;
+  padding: 2px 6px 2px 4px;
+  justify-content: flex-start;
+  background: transparent;
+  box-shadow: none;
+  font: inherit;
+  color: #000;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.startList > li > .popupItem {
+  gap: 8px;
+  min-height: 32px;
+  padding: 4px 6px 4px 8px;
+}
+
+.popupItem:not(:disabled):hover,
+.popupItem:focus,
+.popupItemOpen {
+  background: navy;
+  color: #fff;
+  outline: none;
+}
+
+.popupItem:active {
+  padding: 2px 6px 2px 4px;
+  box-shadow: none;
+}
+
+.startList > li > .popupItem:active {
+  padding: 4px 6px 4px 8px;
+}
+
+.popupItem:disabled {
+  color: grey;
+  text-shadow: 1px 1px #fff;
+}
+
+.popupItemBold .popupLabel {
+  font-weight: 700;
+}
+
+.popupIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.startList > li > .popupItem .popupIcon {
+  width: 24px;
+  height: 24px;
+}
+
+.popupIcon img {
+  image-rendering: pixelated;
+}
+
+.popupLabel {
+  flex: 1;
+  padding-right: 12px;
+}
+
+.popupArrow {
+  font-size: 9px;
+}
+
+@keyframes menu-unroll {
+  from {
+    clip-path: inset(0 0 100% 0);
+  }
+  to {
+    clip-path: inset(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .popupMenu {
+    animation: none;
+  }
+}
+
+.tooltip {
+  position: absolute;
+  max-width: 240px;
+  padding: 1px 4px 2px;
+  background: #ffffe1;
+  border: 1px solid #000;
+  color: #000;
+  font-size: 11px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
 .toolbar {
   display: flex;
   flex-shrink: 0;

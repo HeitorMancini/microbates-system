@@ -14,10 +14,10 @@ export const VFS: VfsNode[] = [
     parentId: "root",
     createdAt: "2026-10-23",
     blocks: [
-      { type: "heading", level: 1, text: "hesmOS" },
+      { type: "heading", level: 1, text: "MicroSystem" },
       {
         type: "paragraph",
-        text: "Bem-vindo ao hesmOS, um portfólio transmídia em forma de sistema operacional.",
+        text: "Bem-vindo ao MicroSystem, um portfólio transmídia em forma de sistema operacional.",
       },
       {
         type: "paragraph",
@@ -144,10 +144,10 @@ export const VFS: VfsNode[] = [
   {
     id: "lnk-hesmos",
     kind: "link",
-    name: "hesmOS",
+    name: "MicroSystem",
     parentId: "dir-engenharia",
     createdAt: "2026-10-23",
-    url: "https://hesm.net",
+    url: "https://microbates.com",
     repo: "https://github.com/TODO/hesmOS",
     stack: ["Next.js", "React", "TypeScript"],
     description: "Este portfólio: um desktop Windows 98 no navegador.",

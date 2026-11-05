@@ -6,6 +6,8 @@ import { getNode } from "@/content/vfs";
 import { clampMove, clampResize, useWindowManager } from "@/os/WindowManager";
 import { uiScale } from "@/os/scale";
 import type { OsWindow } from "@/os/types";
+import { usePopups } from "@/os/ui";
+import { windowMenuItems } from "@/os/windowMenu";
 
 type WindowFrameProps = {
   win: OsWindow;
@@ -18,10 +20,12 @@ export function WindowFrame({ win }: WindowFrameProps) {
     closeWindow,
     minimizeWindow,
     maximizeWindow,
+    restoreWindow,
     moveWindow,
     resizeWindow,
     setWindowFile,
   } = useWindowManager();
+  const { openContextMenu, tooltip } = usePopups();
   // Drag and resize write straight to the DOM and commit on release, so a pointermove
   // never re-renders every window.
   const frameRef = useRef<HTMLDivElement>(null);
@@ -173,33 +177,47 @@ export function WindowFrame({ win }: WindowFrameProps) {
         onPointerUp={onTitlePointerUp}
         onPointerCancel={onTitlePointerUp}
         onDoubleClick={() => {
-          if (resizable) maximizeWindow(win.id);
+          if (resizable && !app?.dialog) maximizeWindow(win.id);
+        }}
+        onContextMenu={(event) => {
+          focusWindow(win.id);
+          openContextMenu(
+            event,
+            windowMenuItems(win, { restoreWindow, minimizeWindow, maximizeWindow, closeWindow }),
+          );
         }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img className="os-window__icon" src={win.icon} alt="" width={16} height={16} />
         <div className="title-bar-text">{win.title}</div>
         <div className="title-bar-controls">
-          <button
-            type="button"
-            aria-label="Minimize"
-            onClick={(event) => {
-              event.stopPropagation();
-              minimizeWindow(win.id);
-            }}
-          />
-          <button
-            type="button"
-            aria-label={maximized ? "Restore" : "Maximize"}
-            disabled={!resizable}
-            onClick={(event) => {
-              event.stopPropagation();
-              maximizeWindow(win.id);
-            }}
-          />
+          {app?.dialog ? null : (
+            <>
+              <button
+                type="button"
+                aria-label="Minimize"
+                {...tooltip("Minimizar")}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  minimizeWindow(win.id);
+                }}
+              />
+              <button
+                type="button"
+                aria-label={maximized ? "Restore" : "Maximize"}
+                {...tooltip(maximized ? "Restaurar" : "Maximizar")}
+                disabled={!resizable}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  maximizeWindow(win.id);
+                }}
+              />
+            </>
+          )}
           <button
             type="button"
             aria-label="Close"
+            {...tooltip("Fechar")}
             onClick={(event) => {
               event.stopPropagation();
               closeWindow(win.id);

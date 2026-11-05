@@ -61,7 +61,7 @@ export function SoundRecorder({ win, file, isVisible, setFile }: AppProps) {
           { label: "Efeitos", items: [{ label: "Inverter", disabled: true }, { label: "Adicionar eco", disabled: true }] },
           {
             label: "Ajuda",
-            items: [{ label: "Sobre o hesmOS", onSelect: () => openFile("doc-about") }],
+            items: [{ label: "Sobre o MicroSystem", onSelect: () => openFile("doc-about") }],
           },
         ]}
       />

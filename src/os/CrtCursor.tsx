@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { warpPoint, type WarpCoefficients } from "@/os/crtGeometry";
-import { uiScale } from "@/os/scale";
+import { toScreenPoint } from "@/os/scale";
 
 type CursorKind = "arrow" | "hand" | "text" | "nwse";
 
@@ -102,15 +102,10 @@ export function CrtCursor({ coefficients }: { coefficients: WarpCoefficients }) 
       if (event.pointerType === "touch" || !(target instanceof Element)) return hide();
       if (target.tagName === "IFRAME" || !desktop.contains(target)) return hide();
 
-      const rect = desktop.getBoundingClientRect();
       const width = desktop.offsetWidth;
       const height = desktop.offsetHeight;
       if (!width || !height) return hide();
-      // getBoundingClientRect may or may not include the html zoom; derive the factor from it.
-      const rectScale = rect.width / width;
-      const pointerScale = uiScale() / rectScale;
-      const localX = (event.clientX / pointerScale - rect.left) / rectScale;
-      const localY = (event.clientY / pointerScale - rect.top) / rectScale;
+      const { x: localX, y: localY } = toScreenPoint(event.clientX, event.clientY);
 
       const bent = warpPoint((localX / width) * 2 - 1, (localY / height) * 2 - 1, coefficientsRef.current);
       const next = cursorFor(target);

@@ -44,5 +44,9 @@ export type AppDefinition = {
   formats?: string[];
   formatTitle?: (file: VfsNode) => string;
   showInStartMenu?: boolean;
+  /** Groups the app under Iniciar > Programas > <folder>. */
+  startMenuFolder?: string;
+  /** Dialog box: centred, close button only. */
+  dialog?: boolean;
   component: ComponentType<AppProps>;
 };

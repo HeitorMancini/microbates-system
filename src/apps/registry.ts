@@ -19,6 +19,11 @@ const ControlPanel = dynamic<AppProps>(() =>
 const InternetExplorer = dynamic<AppProps>(() =>
   import("./internet-explorer/InternetExplorer").then((m) => m.InternetExplorer),
 );
+const Run = dynamic<AppProps>(() => import("./run/Run").then((m) => m.Run));
+const Properties = dynamic<AppProps>(() =>
+  import("./properties/Properties").then((m) => m.Properties),
+);
+const Shutdown = dynamic<AppProps>(() => import("./shutdown/Shutdown").then((m) => m.Shutdown));
 
 export const APPS: AppDefinition[] = [
   {
@@ -57,6 +62,7 @@ export const APPS: AppDefinition[] = [
     instancing: "perFile",
     handles: ["document"],
     formats: ["rtf"],
+    startMenuFolder: "Acessórios",
     component: WordPad,
   },
   {
@@ -70,6 +76,7 @@ export const APPS: AppDefinition[] = [
     instancing: "perFile",
     handles: ["document"],
     formats: ["txt"],
+    startMenuFolder: "Acessórios",
     component: Notepad,
   },
   {
@@ -81,6 +88,7 @@ export const APPS: AppDefinition[] = [
     resizable: false,
     instancing: "single",
     handles: ["audio"],
+    startMenuFolder: "Acessórios",
     component: SoundRecorder,
   },
   {
@@ -105,6 +113,7 @@ export const APPS: AppDefinition[] = [
     resizable: true,
     instancing: "single",
     formatTitle: () => "Painel de Controle",
+    showInStartMenu: false,
     component: ControlPanel,
   },
   {
@@ -119,6 +128,43 @@ export const APPS: AppDefinition[] = [
     handles: ["link"],
     formatTitle: (file) => `${file.name} - Microsoft Internet Explorer`,
     component: InternetExplorer,
+  },
+  {
+    id: "run",
+    title: "Executar",
+    exe: "RUNDLL32.EXE",
+    icon: "/icons/run.svg",
+    defaultSize: { width: 360, height: 168 },
+    resizable: false,
+    instancing: "single",
+    showInStartMenu: false,
+    dialog: true,
+    component: Run,
+  },
+  {
+    id: "properties",
+    title: "Propriedades",
+    exe: "SHELL32.DLL",
+    icon: "/icons/about.svg",
+    defaultSize: { width: 300, height: 300 },
+    resizable: false,
+    instancing: "perFile",
+    showInStartMenu: false,
+    dialog: true,
+    formatTitle: (file) => `Propriedades de ${file.name}`,
+    component: Properties,
+  },
+  {
+    id: "shutdown",
+    title: "Desligar o MicroSystem",
+    exe: "SHUTDOWN.EXE",
+    icon: "/icons/shutdown.svg",
+    defaultSize: { width: 340, height: 196 },
+    resizable: false,
+    instancing: "single",
+    showInStartMenu: false,
+    dialog: true,
+    component: Shutdown,
   },
 ];
 

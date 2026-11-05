@@ -158,7 +158,7 @@ export function VideoPlayer({ win, file, isActive, isVisible, setFile }: AppProp
           },
           {
             label: "Ajuda",
-            items: [{ label: "Sobre o hesmOS", onSelect: () => openFile("doc-about") }],
+            items: [{ label: "Sobre o MicroSystem", onSelect: () => openFile("doc-about") }],
           },
         ]}
       />

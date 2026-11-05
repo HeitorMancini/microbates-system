@@ -73,6 +73,234 @@ body {
   overflow: hidden;
 }
 
+/* Menus and tooltips: above the taskbar, still inside the filtered screen and under the CRT layers. */
+.popup-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 10002;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.popup-layer > * {
+  position: absolute;
+}
+
+.popup-layer__item {
+  pointer-events: auto;
+}
+
+.popup-layer__item > ul {
+  position: relative;
+}
+
+.window-zoom {
+  background: linear-gradient(90deg, navy, #1084d0);
+  pointer-events: none;
+}
+
+/* Shutdown and boot screens sit above everything on the screen, still under the CRT layers. */
+.power-screen {
+  position: absolute;
+  inset: 0;
+  z-index: 10003;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.power-screen--black {
+  background: #000;
+}
+
+.power-screen--sky {
+  background: linear-gradient(to bottom, #1d4aa0, #5d8fdc 55%, #b4d0f2);
+  color: #fff;
+}
+
+.power-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 40px;
+  text-shadow: 2px 2px rgba(0, 0, 0, 0.45);
+}
+
+.power-logo .start-logo {
+  width: 36px;
+  height: 36px;
+}
+
+.power-message {
+  margin: 28px 0 0;
+  font-size: 14px;
+  text-shadow: 1px 1px rgba(0, 0, 0, 0.5);
+}
+
+.power-safe {
+  max-width: 70%;
+  margin: 0;
+  color: #ff8c00;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.power-bios {
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding: 18px 22px;
+  color: #c0c0c0;
+  font-family: "Lucida Console", "Courier New", monospace;
+  font-size: 13px;
+  line-height: 1.35;
+  -webkit-font-smoothing: auto;
+}
+
+.power-bios p {
+  margin: 0;
+  white-space: pre;
+  animation: power-line 1ms step-end both;
+  animation-delay: calc(var(--line) * 160ms);
+}
+
+.power-progress {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 10px;
+  background: linear-gradient(90deg, #00f, #0ff, #0f0, #ff0, #f00, #f0f, #00f) 0 0 / 50% 100% repeat-x;
+  animation: power-progress 1.2s linear infinite;
+}
+
+.desktop--off {
+  animation: crt-power-off 700ms ease-in forwards;
+}
+
+.desktop--warmup {
+  animation: crt-power-on 600ms ease-out;
+}
+
+.power-button {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transform: translate(-50%, -50%);
+  padding: 6px 14px;
+  background: transparent;
+  border: 1px solid #333;
+  border-radius: 16px;
+  box-shadow: none;
+  color: #666;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  animation: power-button-in 400ms 900ms both;
+}
+
+.power-button:hover,
+.power-button:focus-visible {
+  border-color: #666;
+  color: #aaa;
+  outline: none;
+}
+
+.power-button__icon {
+  position: relative;
+  width: 10px;
+  height: 10px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+}
+
+.power-button__icon::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -5px;
+  width: 2px;
+  height: 8px;
+  background: currentColor;
+  transform: translateX(-50%);
+}
+
+@keyframes power-line {
+  from {
+    visibility: hidden;
+  }
+  to {
+    visibility: visible;
+  }
+}
+
+@keyframes power-progress {
+  to {
+    background-position: 50% 0;
+  }
+}
+
+@keyframes crt-power-off {
+  0% {
+    transform: scale(1, 1);
+    filter: brightness(1);
+  }
+  45% {
+    transform: scale(1, 0.006);
+    filter: brightness(2.5);
+  }
+  80% {
+    transform: scale(0.004, 0.006);
+    filter: brightness(4);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0, 0);
+    opacity: 0;
+  }
+}
+
+@keyframes crt-power-on {
+  0% {
+    transform: scale(0.004, 0.006);
+    filter: brightness(4);
+  }
+  40% {
+    transform: scale(1, 0.006);
+    filter: brightness(2.5);
+  }
+  100% {
+    transform: scale(1, 1);
+    filter: brightness(1);
+  }
+}
+
+@keyframes power-button-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .desktop--off {
+    animation: none;
+    opacity: 0;
+  }
+
+  .desktop--warmup,
+  .power-bios p,
+  .power-progress,
+  .power-button {
+    animation: none;
+  }
+}
+
 .crt__defs {
   position: absolute;
   width: 0;
@@ -265,26 +493,54 @@ body {
 
 .desktop-icon:focus {
   outline: none;
-  border-color: #fff;
 }
 
-.desktop-icon:focus span,
-.desktop-icon:active span {
+.desktop-icon:focus .desktop-icon__label {
+  outline: 1px dotted #fff;
+}
+
+.desktop-icon--selected .desktop-icon__label {
   background: navy;
 }
 
+.desktop-icon__image {
+  position: relative;
+  display: block;
+  width: 32px;
+  height: 32px;
+}
+
+/* 50% navy dither over the icon's own shape, like Windows 98's selected icons. */
+.desktop-icon--selected .desktop-icon__image::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-conic-gradient(navy 0 25%, transparent 0 50%) 0 0 / 2px 2px;
+  -webkit-mask: var(--icon) center / 100% 100% no-repeat;
+  mask: var(--icon) center / 100% 100% no-repeat;
+}
+
 .desktop-icon img {
+  display: block;
   image-rendering: pixelated;
   width: 32px;
   height: 32px;
 }
 
-.desktop-icon span {
+.desktop-icon__label {
   margin-top: 4px;
   padding: 1px 3px;
   font-size: 11px;
   text-align: center;
   line-height: 1.2;
+}
+
+.desktop-marquee {
+  position: absolute;
+  display: none;
+  z-index: 1;
+  border: 1px dotted #fff;
+  pointer-events: none;
 }
 
 .os-window {
@@ -413,6 +669,23 @@ body {
   box-shadow: inset -1px -1px #0a0a0a, inset 1px 1px #fff, inset -2px -2px grey,
     inset 2px 2px #dfdfdf;
   z-index: 10001;
+  font-size: 11px;
+  animation: start-menu-unroll 120ms steps(4);
+}
+
+@keyframes start-menu-unroll {
+  from {
+    clip-path: inset(100% 0 0 0);
+  }
+  to {
+    clip-path: inset(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .start-menu {
+    animation: none;
+  }
 }
 
 .start-menu__banner {
@@ -425,35 +698,6 @@ body {
   font-size: 16px;
   letter-spacing: 1px;
   padding: 8px 2px;
-}
-
-.start-menu__list {
-  list-style: none;
-  margin: 0;
-  padding: 2px;
-  flex: 1;
-}
-
-.start-menu__list button {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  min-width: unset;
-  min-height: 32px;
-  justify-content: flex-start;
-  padding: 4px 12px 4px 8px;
-  background: transparent;
-  box-shadow: none;
-  text-shadow: none;
-  color: #000;
-}
-
-.start-menu__list button:hover,
-.start-menu__list button:focus {
-  background: navy;
-  color: #fff;
-  outline: none;
 }
 
 .taskbar-programs {
@@ -503,8 +747,7 @@ body {
   font-size: 11px;
 }
 
-.taskbar-app img,
-.start-menu__list img {
+.taskbar-app img {
   image-rendering: pixelated;
   flex-shrink: 0;
 }

@@ -4,7 +4,15 @@ import { useEffect, useRef, useState } from "react";
 import styles from "./ui.module.css";
 
 export type MenuItem =
-  | { label: string; onSelect?: () => void; disabled?: boolean; checked?: boolean }
+  | {
+      label: string;
+      onSelect?: () => void;
+      disabled?: boolean;
+      checked?: boolean;
+      icon?: string;
+      bold?: boolean;
+      items?: MenuItem[];
+    }
   | "separator";
 
 export type Menu = { label: string; items: MenuItem[] };

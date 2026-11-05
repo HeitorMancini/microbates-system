@@ -1,0 +1,83 @@
+.root {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 10px;
+  padding: 10px 10px 8px;
+}
+
+.intro {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.intro img {
+  flex-shrink: 0;
+  image-rendering: pixelated;
+}
+
+.intro p {
+  margin: 2px 0 0;
+  line-height: 1.4;
+}
+
+.field label {
+  width: 44px;
+  flex-shrink: 0;
+}
+
+.field input {
+  flex: 1;
+}
+
+.buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: auto;
+}
+
+.modal {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+}
+
+.alertBody {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.alertText {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.alertText p {
+  margin: 0;
+  line-height: 1.4;
+}
+
+.errorIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border: 1px solid #000;
+  border-radius: 50%;
+  background: #f00;
+  color: #fff;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+}

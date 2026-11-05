@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { APPS } from "@/apps/registry";
+import { StartMenu } from "@/os/StartMenu";
+import { usePopups } from "@/os/ui";
+import { windowMenuItems } from "@/os/windowMenu";
 import { useWindowManager } from "@/os/WindowManager";
 
 function formatClock(date: Date): string {
@@ -11,15 +13,33 @@ function formatClock(date: Date): string {
   });
 }
 
+function formatLongDate(date: Date): string {
+  return date.toLocaleDateString("pt-BR", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
+
+function isTruncated(button: HTMLElement): boolean {
+  const label = button.querySelector("span");
+  return !!label && label.scrollWidth > label.clientWidth;
+}
+
 export function Taskbar() {
   const {
     windows,
     focusedId,
     startMenuOpen,
-    openApp,
     toggleTaskbarWindow,
+    restoreWindow,
+    minimizeWindow,
+    maximizeWindow,
+    closeWindow,
     setStartMenuOpen,
   } = useWindowManager();
+  const { openContextMenu, tooltip } = usePopups();
   const [now, setNow] = useState<Date | null>(null);
 
   useEffect(() => {
@@ -50,31 +70,13 @@ export function Taskbar() {
         aria-expanded={startMenuOpen}
         aria-haspopup="menu"
         onClick={() => setStartMenuOpen(!startMenuOpen)}
+        {...tooltip("Clique aqui para começar.", () => !startMenuOpen)}
       >
         <span className="start-logo" aria-hidden="true" />
         Iniciar
       </button>
 
-      {startMenuOpen ? (
-        <div className="start-menu" role="menu" aria-label="Menu Iniciar">
-          <div className="start-menu__banner">hesmOS</div>
-          <ul className="start-menu__list">
-            {APPS.filter((app) => app.showInStartMenu !== false).map((app) => (
-              <li key={app.id}>
-                <button
-                  type="button"
-                  role="menuitem"
-                  onClick={() => openApp(app.id)}
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={app.icon} alt="" width={24} height={24} />
-                  {app.title}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
+      {startMenuOpen ? <StartMenu /> : null}
 
       <div className="taskbar-programs">
         {windows.map((win) => {
@@ -86,7 +88,15 @@ export function Taskbar() {
               className={`taskbar-app${pressed ? " taskbar-app--active" : ""}`}
               aria-pressed={pressed}
               aria-label={win.title}
+              data-taskbar-id={win.id}
               onClick={() => toggleTaskbarWindow(win.id)}
+              onContextMenu={(event) =>
+                openContextMenu(
+                  event,
+                  windowMenuItems(win, { restoreWindow, minimizeWindow, maximizeWindow, closeWindow }),
+                )
+              }
+              {...tooltip(win.title, isTruncated)}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={win.icon} alt="" width={16} height={16} />
@@ -96,7 +106,7 @@ export function Taskbar() {
         })}
       </div>
 
-      <div className="taskbar-tray" aria-label="Relógio">
+      <div className="taskbar-tray" aria-label="Relógio" {...tooltip(now ? formatLongDate(now) : "")}>
         <time dateTime={now ? now.toISOString() : undefined}>
           {now ? formatClock(now) : "--:--"}
         </time>

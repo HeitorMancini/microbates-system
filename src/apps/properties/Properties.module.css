@@ -1,0 +1,63 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  padding: 6px 8px 8px;
+}
+
+.tabs {
+  flex-shrink: 0;
+  margin: 0;
+}
+
+.panel {
+  flex: 1;
+  min-height: 0;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 4px 2px;
+}
+
+.header img {
+  flex-shrink: 0;
+  image-rendering: pixelated;
+}
+
+.header input {
+  flex: 1;
+}
+
+.rule {
+  margin: 8px 0;
+  border: 0;
+  border-top: 1px solid grey;
+  border-bottom: 1px solid #fff;
+}
+
+.rows {
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  gap: 6px 8px;
+  margin: 0;
+  padding: 0 2px;
+}
+
+.rows dd {
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.buttons {
+  display: flex;
+  flex-shrink: 0;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 8px;
+}

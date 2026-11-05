@@ -110,7 +110,7 @@ export function WordPad({ win, file }: AppProps) {
           { label: "Formatar", items: [{ label: "Fonte...", disabled: true }] },
           {
             label: "Ajuda",
-            items: [{ label: "Sobre o hesmOS", onSelect: () => openFile("doc-about") }],
+            items: [{ label: "Sobre o MicroSystem", onSelect: () => openFile("doc-about") }],
           },
         ]}
       />
@@ -174,7 +174,7 @@ export function Notepad({ win, file }: AppProps) {
           { label: "Pesquisar", items: [{ label: "Localizar...", disabled: true }] },
           {
             label: "Ajuda",
-            items: [{ label: "Sobre o hesmOS", onSelect: () => openFile("doc-about") }],
+            items: [{ label: "Sobre o MicroSystem", onSelect: () => openFile("doc-about") }],
           },
         ]}
       />

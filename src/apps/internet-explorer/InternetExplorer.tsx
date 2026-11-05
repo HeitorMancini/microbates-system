@@ -50,7 +50,7 @@ function HomePage({ onNavigate }: { onNavigate: (entry: Entry) => void }) {
   return (
     <div className={styles.home}>
       <header className={styles.homeHeader}>
-        <span className={styles.homeLogo}>hesmOS</span>
+        <span className={styles.homeLogo}>MicroSystem</span>
         <span>na Web</span>
       </header>
       <div className={styles.homeBody}>

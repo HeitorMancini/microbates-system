@@ -18,8 +18,8 @@ export type CommandResult = {
 };
 
 export const BANNER = [
-  "hesmOS [Versão 4.10.1998]",
-  "(C) Copyright hesm 1998-2026.",
+  "MicroSystem [Versão 4.10.1998]",
+  "(C) Copyright Microbates Company 1998-2026.",
   "",
   "Digite HELP para ver os comandos disponíveis.",
   "",
@@ -50,7 +50,7 @@ function dirListing(folder: VfsNode): string[] {
   const children = getChildren(folder.id);
   const folders = children.filter((child) => child.kind === "folder").length;
   const lines = [
-    " O volume na unidade C é HESMOS",
+    " O volume na unidade C é MICROSYSTEM",
     ` Pasta de ${getPath(folder.id)}`,
     "",
     ...children.map((child) => {
@@ -105,7 +105,7 @@ export function runCommand(raw: string, cwd: string): CommandResult {
     case "cls":
       return { output: [], clear: true };
     case "ver":
-      return { output: ["", "hesmOS [Versão 4.10.1998]", ""] };
+      return { output: ["", "MicroSystem [Versão 4.10.1998]", ""] };
     case "echo":
       return { output: [arg] };
     case "exit":

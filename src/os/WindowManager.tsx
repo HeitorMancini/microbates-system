@@ -4,14 +4,17 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useReducer,
+  useRef,
   type ReactNode,
 } from "react";
 import { getApp, resolveAppForNode, windowTitle } from "@/apps/registry";
 import { getNode } from "@/content/vfs";
 import { viewportSize } from "@/os/scale";
 import type { AppDefinition, Bounds, OsWindow } from "@/os/types";
+import { animateWindow } from "@/os/windowAnimation";
 
 const TASKBAR_HEIGHT = 32;
 const CASCADE_OFFSET = 28;
@@ -25,7 +28,7 @@ type OsState = {
 };
 
 type OsAction =
-  | { type: "open"; appId: string; fileId?: string }
+  | { type: "open"; appId: string; fileId?: string; maximized?: boolean }
   | { type: "setFile"; id: string; fileId?: string }
   | { type: "resize"; id: string; width: number; height: number }
   | { type: "close"; id: string }
@@ -136,19 +139,21 @@ function osReducer(state: OsState, action: OsAction): OsState {
         };
       }
 
-      const origin = cascadeOrigin(state.windows.length);
       const nextZ = state.nextZ + 1;
       const id = `${app.id}-${nextZ}`;
       const desk = desktopSize();
       const width = Math.min(app.defaultSize.width, desk.width);
       const height = Math.min(app.defaultSize.height, desk.height);
+      const origin = app.dialog
+        ? { x: Math.round((desk.width - width) / 2), y: Math.round((desk.height - height) / 2) }
+        : cascadeOrigin(state.windows.length);
       const bounds = clampPosition(
         Math.max(0, Math.min(origin.x, desk.width - width)),
         Math.max(0, Math.min(origin.y, desk.height - height)),
         width,
         height,
       );
-      const maximize = isCoarsePointer() && app.resizable !== false;
+      const maximize = action.maximized || (isCoarsePointer() && app.resizable !== false);
       const win: OsWindow = {
         id,
         appId: app.id,
@@ -334,7 +339,7 @@ const initialState: OsState = {
 };
 
 type WindowManagerValue = OsState & {
-  openApp: (appId: string, fileId?: string) => void;
+  openApp: (appId: string, fileId?: string, options?: { maximized?: boolean }) => void;
   openFile: (fileId: string) => void;
   setWindowFile: (id: string, fileId?: string) => void;
   resizeWindow: (id: string, width: number, height: number) => void;
@@ -352,10 +357,21 @@ const WindowManagerContext = createContext<WindowManagerValue | null>(null);
 
 export function WindowManagerProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(osReducer, initialState);
+  const stateRef = useRef(state);
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
+  const findWindow = useCallback(
+    (id: string) => stateRef.current.windows.find((win) => win.id === id),
+    [],
+  );
 
-  const openApp = useCallback((appId: string, fileId?: string) => {
-    dispatch({ type: "open", appId, fileId });
-  }, []);
+  const openApp = useCallback(
+    (appId: string, fileId?: string, options?: { maximized?: boolean }) => {
+      dispatch({ type: "open", appId, fileId, maximized: options?.maximized });
+    },
+    [],
+  );
   const openFile = useCallback((fileId: string) => {
     const node = getNode(fileId);
     if (!node) return;
@@ -374,18 +390,40 @@ export function WindowManagerProvider({ children }: { children: ReactNode }) {
   const focusWindow = useCallback((id: string) => {
     dispatch({ type: "focus", id });
   }, []);
-  const minimizeWindow = useCallback((id: string) => {
-    dispatch({ type: "minimize", id });
-  }, []);
-  const maximizeWindow = useCallback((id: string) => {
-    dispatch({ type: "maximize", id });
-  }, []);
-  const restoreWindow = useCallback((id: string) => {
-    dispatch({ type: "restore", id });
-  }, []);
-  const toggleTaskbarWindow = useCallback((id: string) => {
-    dispatch({ type: "toggleTaskbar", id });
-  }, []);
+  const minimizeWindow = useCallback(
+    (id: string) => {
+      const win = findWindow(id);
+      if (win && win.mode !== "minimized") animateWindow(win, "minimize");
+      dispatch({ type: "minimize", id });
+    },
+    [findWindow],
+  );
+  const maximizeWindow = useCallback(
+    (id: string) => {
+      const win = findWindow(id);
+      if (win) animateWindow(win, win.mode === "maximized" ? "unmaximize" : "maximize");
+      dispatch({ type: "maximize", id });
+    },
+    [findWindow],
+  );
+  const restoreWindow = useCallback(
+    (id: string) => {
+      const win = findWindow(id);
+      if (win?.mode === "minimized") animateWindow(win, "restore");
+      else if (win?.mode === "maximized") animateWindow(win, "unmaximize");
+      dispatch({ type: "restore", id });
+    },
+    [findWindow],
+  );
+  const toggleTaskbarWindow = useCallback(
+    (id: string) => {
+      const win = findWindow(id);
+      if (win?.mode === "minimized") animateWindow(win, "restore");
+      else if (win && stateRef.current.focusedId === id) animateWindow(win, "minimize");
+      dispatch({ type: "toggleTaskbar", id });
+    },
+    [findWindow],
+  );
   const moveWindow = useCallback((id: string, x: number, y: number) => {
     dispatch({ type: "move", id, x, y });
   }, []);

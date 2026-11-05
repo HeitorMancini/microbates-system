@@ -4,7 +4,7 @@ import "98.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "hesmOS - Desktop",
+  title: "MicroSystem",
   description:
     "Portfólio em forma de área de trabalho inspirada no Windows 98.",
 };
