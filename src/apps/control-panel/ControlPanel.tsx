@@ -101,7 +101,7 @@ function Group({ legend, children }: { legend: string; children: ReactNode }) {
 
 function MonitorPreview({ settings }: { settings: DisplaySettings }) {
   const on = settings.enabled;
-  const radius = on && settings.bezel ? 4 + curvedness(settings.tubeRadius) * 14 : 0;
+  const radius = on ? 4 + curvedness(settings.tubeRadius) * 14 : 0;
   const vars = {
     "--preview-radius": `${radius}px`,
     "--preview-scan": on && settings.scanlines ? settings.scanlinesIntensity / 100 : 0,
@@ -174,7 +174,6 @@ export function ControlPanel({ win }: AppProps) {
                 <Checkbox label="Ativar efeitos de monitor CRT" setting="enabled" />
               </Group>
               <Group legend="Tubo de imagem">
-                <Checkbox label="Moldura do monitor" setting="bezel" disabled={off} />
                 <Slider
                   label="Raio do tubo:"
                   setting="tubeRadius"

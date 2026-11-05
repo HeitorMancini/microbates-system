@@ -4,7 +4,6 @@ import { useSyncExternalStore } from "react";
 
 export type DisplaySettings = {
   enabled: boolean;
-  bezel: boolean;
   /** Faceplate radius of curvature in millimetres. */
   tubeRadius: number;
   warp: boolean;
@@ -26,15 +25,14 @@ export type DisplaySettings = {
 
 export const DEFAULT_DISPLAY_SETTINGS: DisplaySettings = {
   enabled: true,
-  bezel: true,
   tubeRadius: 2000,
   warp: true,
   vignette: true,
-  vignetteIntensity: 60,
+  vignetteIntensity: 40,
   reflection: true,
   reflectionIntensity: 35,
   scanlines: true,
-  scanlinesIntensity: 60,
+  scanlinesIntensity: 45,
   scanlinesScroll: true,
   rgb: true,
   rgbIntensity: 25,

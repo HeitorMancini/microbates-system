@@ -81,7 +81,12 @@ function HomePage({ onNavigate }: { onNavigate: (entry: Entry) => void }) {
 
 function InfoBar({ url }: { url: string }) {
   return (
-    <button type="button" className={styles.infoBar} onClick={() => openExternal(url)}>
+    <button
+      type="button"
+      className={styles.infoBar}
+      data-cursor="pointer"
+      onClick={() => openExternal(url)}
+    >
       <WarningIcon />
       <span>
         Este site não permite ser exibido dentro de outra janela. Clique aqui para abrir em uma nova
@@ -98,6 +103,7 @@ function BlockedPage({ url, node }: { url: string; node?: LinkNode }) {
         <button
           type="button"
           className={styles.previewImage}
+          data-cursor="pointer"
           onClick={() => openExternal(url)}
           title="Abrir site em nova aba"
         >

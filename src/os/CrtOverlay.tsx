@@ -1,6 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type CSSProperties,
+} from "react";
+import { CrtCursor } from "@/os/CrtCursor";
 import { warpCoefficients, type WarpCoefficients } from "@/os/crtGeometry";
 import { useDisplaySettings } from "@/os/displaySettings";
 import { uiScale, viewportSize } from "@/os/scale";
@@ -8,12 +16,12 @@ import { uiScale, viewportSize } from "@/os/scale";
 const LINE_SPACING = 5;
 const LINE_WIDTH = 2;
 const MAX_RGB_SHIFT = 1.4;
-const LINE_COLOR = "rgba(0, 0, 0, 0.45)";
+const LINE_COLOR = "rgba(0, 0, 0, 0.3)";
 const TINTS = ["rgba(255, 40, 120, 0.15)", "rgba(40, 255, 200, 0.12)", "rgba(80, 120, 255, 0.12)"];
 const SCANLINE_PERIOD = LINE_SPACING * TINTS.length;
 const NOISE_SIZE = 160;
 const WARP_MAP_SIZE = 256;
-const SCREEN_TONE = "contrast(1.08) saturate(1.1) brightness(1.03)";
+const SCREEN_TONE = "contrast(1.04) saturate(1.1) brightness(1.12)";
 
 function drawScanlines(canvas: HTMLCanvasElement, curvature: number) {
   const scale = uiScale();
@@ -88,6 +96,18 @@ function warpMap(coefficients: WarpCoefficients): string {
   return canvas.toDataURL();
 }
 
+const COARSE_POINTER = "(pointer: coarse)";
+
+function isCoarsePointer(): boolean {
+  return window.matchMedia(COARSE_POINTER).matches;
+}
+
+function subscribeCoarsePointer(onChange: () => void) {
+  const query = window.matchMedia(COARSE_POINTER);
+  query.addEventListener("change", onChange);
+  return () => query.removeEventListener("change", onChange);
+}
+
 function noiseTile(): string {
   const canvas = document.createElement("canvas");
   canvas.width = NOISE_SIZE;
@@ -117,10 +137,21 @@ export function CrtOverlay() {
   const showLines = settings.enabled && settings.scanlines;
   const showNoise = settings.enabled && settings.noise;
   const rgbShift = (settings.rgbIntensity / 100) * MAX_RGB_SHIFT;
-  const useWarp = settings.enabled && settings.warp;
+  const coarsePointer = useSyncExternalStore(subscribeCoarsePointer, isCoarsePointer, () => false);
+  // Touch has no cursor to compensate the bent hit area, so keep the image flat there.
+  const useWarp = settings.enabled && settings.warp && !coarsePointer;
   const useRgb = settings.enabled && settings.rgb && rgbShift > 0;
 
   const [warpReadyFor, setWarpReadyFor] = useState<number | null>(null);
+  const [warpHref, setWarpHref] = useState("");
+  const [screenWidth, setScreenWidth] = useState(1024);
+
+  useEffect(() => {
+    const update = () => setScreenWidth(viewportSize().width || 1024);
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
   const warpReady = useWarp && warpReadyFor === radius;
 
   useEffect(() => {
@@ -132,6 +163,7 @@ export function CrtOverlay() {
     image.onload = () => {
       if (cancelled) return;
       warpImageRef.current?.setAttribute("href", url);
+      setWarpHref(url);
       setWarpReadyFor(radius);
     };
     image.src = url;
@@ -142,8 +174,9 @@ export function CrtOverlay() {
 
   useEffect(() => {
     const filters = [
-      warpReady ? "url(#crt-warp)" : "",
-      useRgb ? "url(#crt-rgb)" : "",
+      // One SVG pass instead of two: each filter re-rasterises the whole screen on every repaint.
+      warpReady && useRgb ? "url(#crt-both)" : warpReady ? "url(#crt-warp)" : "",
+      !warpReady && useRgb ? "url(#crt-rgb)" : "",
       settings.enabled ? SCREEN_TONE : "",
     ].filter(Boolean);
     const root = document.documentElement;
@@ -219,6 +252,49 @@ export function CrtOverlay() {
             yChannelSelector="G"
           />
         </filter>
+        <filter
+          id="crt-both"
+          x="0"
+          y="0"
+          width="1"
+          height="1"
+          primitiveUnits="objectBoundingBox"
+          colorInterpolationFilters="sRGB"
+        >
+          <feImage
+            href={warpHref}
+            x="0"
+            y="0"
+            width="1"
+            height="1"
+            preserveAspectRatio="none"
+            result="map"
+          />
+          <feDisplacementMap
+            in="SourceGraphic"
+            in2="map"
+            scale={warpScale(coefficients)}
+            xChannelSelector="R"
+            yChannelSelector="G"
+            result="bent"
+          />
+          <feColorMatrix
+            in="bent"
+            type="matrix"
+            values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0"
+            result="red"
+          />
+          {/* primitiveUnits is objectBoundingBox here, so the pixel shift becomes a width fraction. */}
+          <feOffset in="red" dx={-rgbShift / screenWidth} dy="0" result="redShift" />
+          <feColorMatrix
+            in="bent"
+            type="matrix"
+            values="0 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 1 0"
+            result="cyan"
+          />
+          <feOffset in="cyan" dx={rgbShift / screenWidth} dy="0" result="cyanShift" />
+          <feBlend in="redShift" in2="cyanShift" mode="screen" />
+        </filter>
         <filter id="crt-rgb" x="0" y="0" width="100%" height="100%" colorInterpolationFilters="sRGB">
           <feColorMatrix
             in="SourceGraphic"
@@ -238,6 +314,7 @@ export function CrtOverlay() {
         </filter>
       </svg>
       <div className={classes} style={vars} aria-hidden="true">
+        {warpReady ? <CrtCursor coefficients={coefficients} /> : null}
         {showLines ? (
           <canvas
             ref={linesRef}
