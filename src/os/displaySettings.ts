@@ -51,12 +51,19 @@ const listeners = new Set<() => void>();
 let current = DEFAULT_DISPLAY_SETTINGS;
 let loaded = false;
 
+/** First-visit guess for low-end hardware, before the frame-time check has run. */
+function prefersLite(): boolean {
+  const memory = (navigator as Navigator & { deviceMemory?: number }).deviceMemory;
+  return (navigator.hardwareConcurrency ?? 8) <= 4 || (memory !== undefined && memory <= 4);
+}
+
 function load() {
   if (loaded || typeof window === "undefined") return;
   loaded = true;
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (raw) current = { ...DEFAULT_DISPLAY_SETTINGS, ...JSON.parse(raw) };
+    else if (prefersLite()) current = { ...DEFAULT_DISPLAY_SETTINGS, lite: true };
   } catch {
     current = DEFAULT_DISPLAY_SETTINGS;
   }

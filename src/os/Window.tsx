@@ -3,7 +3,7 @@
 import { useCallback, useRef, type PointerEvent } from "react";
 import { getApp } from "@/apps/registry";
 import { getNode } from "@/content/vfs";
-import { useWindowManager } from "@/os/WindowManager";
+import { clampMove, clampResize, useWindowManager } from "@/os/WindowManager";
 import { uiScale } from "@/os/scale";
 import type { OsWindow } from "@/os/types";
 
@@ -22,13 +22,24 @@ export function WindowFrame({ win }: WindowFrameProps) {
     resizeWindow,
     setWindowFile,
   } = useWindowManager();
-  const drag = useRef<{ scale: number; offsetX: number; offsetY: number } | null>(null);
+  // Drag and resize write straight to the DOM and commit on release, so a pointermove
+  // never re-renders every window.
+  const frameRef = useRef<HTMLDivElement>(null);
+  const drag = useRef<{
+    scale: number;
+    offsetX: number;
+    offsetY: number;
+    x: number;
+    y: number;
+  } | null>(null);
   const resize = useRef<{
     scale: number;
     startX: number;
     startY: number;
     width: number;
     height: number;
+    nextWidth: number;
+    nextHeight: number;
   } | null>(null);
   const app = getApp(win.appId);
   const visible = win.mode !== "minimized";
@@ -55,18 +66,33 @@ export function WindowFrame({ win }: WindowFrameProps) {
       scale,
       offsetX: event.clientX / scale - win.x,
       offsetY: event.clientY / scale - win.y,
+      x: win.x,
+      y: win.y,
     };
     event.currentTarget.setPointerCapture(event.pointerId);
   };
 
   const onTitlePointerMove = (event: PointerEvent<HTMLDivElement>) => {
-    if (!drag.current) return;
-    const { scale, offsetX, offsetY } = drag.current;
-    moveWindow(win.id, event.clientX / scale - offsetX, event.clientY / scale - offsetY);
+    const current = drag.current;
+    const frame = frameRef.current;
+    if (!current || !frame) return;
+    const next = clampMove(
+      win,
+      event.clientX / current.scale - current.offsetX,
+      event.clientY / current.scale - current.offsetY,
+    );
+    current.x = next.x;
+    current.y = next.y;
+    frame.style.transform = `translate(${next.x - win.x}px, ${next.y - win.y}px)`;
   };
 
   const onTitlePointerUp = (event: PointerEvent<HTMLDivElement>) => {
+    const current = drag.current;
     drag.current = null;
+    if (current) {
+      if (frameRef.current) frameRef.current.style.transform = "";
+      if (current.x !== win.x || current.y !== win.y) moveWindow(win.id, current.x, current.y);
+    }
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
@@ -82,22 +108,35 @@ export function WindowFrame({ win }: WindowFrameProps) {
       startY: event.clientY,
       width: win.width,
       height: win.height,
+      nextWidth: win.width,
+      nextHeight: win.height,
     };
     event.currentTarget.setPointerCapture(event.pointerId);
   };
 
   const onGripPointerMove = (event: PointerEvent<HTMLDivElement>) => {
-    if (!resize.current) return;
-    const { scale, startX, startY, width, height } = resize.current;
-    resizeWindow(
-      win.id,
-      width + (event.clientX - startX) / scale,
-      height + (event.clientY - startY) / scale,
+    const current = resize.current;
+    const frame = frameRef.current;
+    if (!current || !frame) return;
+    const next = clampResize(
+      win,
+      current.width + (event.clientX - current.startX) / current.scale,
+      current.height + (event.clientY - current.startY) / current.scale,
     );
+    current.nextWidth = next.width;
+    current.nextHeight = next.height;
+    frame.style.width = `${next.width}px`;
+    frame.style.height = `${next.height}px`;
   };
 
   const onGripPointerUp = (event: PointerEvent<HTMLDivElement>) => {
+    const current = resize.current;
     resize.current = null;
+    if (current) {
+      if (current.nextWidth !== win.width || current.nextHeight !== win.height) {
+        resizeWindow(win.id, current.nextWidth, current.nextHeight);
+      }
+    }
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
@@ -107,6 +146,7 @@ export function WindowFrame({ win }: WindowFrameProps) {
 
   return (
     <div
+      ref={frameRef}
       className={`window os-window${maximized ? " os-window--maximized" : ""}`}
       role="dialog"
       aria-label={win.title}

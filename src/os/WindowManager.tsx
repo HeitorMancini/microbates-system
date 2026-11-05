@@ -61,6 +61,24 @@ function desktopSize(): { width: number; height: number } {
   };
 }
 
+export function clampMove(win: OsWindow, x: number, y: number): { x: number; y: number } {
+  const next = clampPosition(x, y, win.width, win.height);
+  return { x: next.x, y: next.y };
+}
+
+export function clampResize(
+  win: OsWindow,
+  width: number,
+  height: number,
+): { width: number; height: number } {
+  const min = getApp(win.appId)?.minSize ?? DEFAULT_MIN_SIZE;
+  const desk = desktopSize();
+  return {
+    width: Math.min(Math.max(min.width, width), desk.width - win.x),
+    height: Math.min(Math.max(min.height, height), desk.height - win.y),
+  };
+}
+
 function cascadeOrigin(count: number): { x: number; y: number } {
   const col = count % 8;
   return { x: 60 + col * CASCADE_OFFSET, y: 40 + col * CASCADE_OFFSET };
@@ -262,7 +280,7 @@ function osReducer(state: OsState, action: OsAction): OsState {
         ...state,
         windows: state.windows.map((win) => {
           if (win.id !== action.id || win.mode === "maximized") return win;
-          const next = clampPosition(action.x, action.y, win.width, win.height);
+          const next = clampMove(win, action.x, action.y);
           return {
             ...win,
             x: next.x,
@@ -277,10 +295,7 @@ function osReducer(state: OsState, action: OsAction): OsState {
         ...state,
         windows: state.windows.map((win) => {
           if (win.id !== action.id || win.mode === "maximized") return win;
-          const min = getApp(win.appId)?.minSize ?? DEFAULT_MIN_SIZE;
-          const desk = desktopSize();
-          const width = Math.min(Math.max(min.width, action.width), desk.width - win.x);
-          const height = Math.min(Math.max(min.height, action.height), desk.height - win.y);
+          const { width, height } = clampResize(win, action.width, action.height);
           return {
             ...win,
             width,

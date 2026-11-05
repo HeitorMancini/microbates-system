@@ -139,7 +139,8 @@ body {
 
 .crt__noise {
   position: absolute;
-  inset: -50%;
+  /* crt-grain shifts stay under 8% of this box, which fits inside the 10% bleed. */
+  inset: -10%;
   opacity: var(--crt-noise-opacity, 0.07);
   mix-blend-mode: overlay;
   animation: crt-grain 0.5s steps(5) infinite;
@@ -183,11 +184,11 @@ body {
 
 @keyframes crt-grain {
   0% { transform: translate(0, 0); }
-  20% { transform: translate(-7%, 4%); }
-  40% { transform: translate(5%, -9%); }
-  60% { transform: translate(-3%, 8%); }
-  80% { transform: translate(9%, 2%); }
-  100% { transform: translate(-5%, -4%); }
+  20% { transform: translate(-6%, 3%); }
+  40% { transform: translate(4%, -7%); }
+  60% { transform: translate(-2%, 6%); }
+  80% { transform: translate(7%, 2%); }
+  100% { transform: translate(-4%, -3%); }
 }
 
 @keyframes crt-band {

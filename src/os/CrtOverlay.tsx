@@ -22,10 +22,11 @@ const SCANLINE_PERIOD = LINE_SPACING * TINTS.length;
 const NOISE_SIZE = 160;
 const WARP_MAP_SIZE = 256;
 const SCREEN_TONE = "contrast(1.04) saturate(1.1) brightness(1.12)";
+const MAX_CANVAS_DPR = 2;
 
 function drawScanlines(canvas: HTMLCanvasElement, curvature: number) {
   const scale = uiScale();
-  const dpr = (window.devicePixelRatio || 1) * scale;
+  const dpr = Math.min((window.devicePixelRatio || 1) * scale, MAX_CANVAS_DPR);
   const viewport = viewportSize();
   const width = viewport.width;
   const height = viewport.height + SCANLINE_PERIOD;
@@ -103,6 +104,9 @@ const PERF_MAX_MEDIAN_MS = 34;
 /**
  * Runs once per browser: after the page settles it times ~120 frames and, if the
  * median frame takes longer than ~30 fps allows, switches the heavy effects off.
+ * An idle screen keeps its filtered result cached, so a 1px probe inside the
+ * filtered screen changes colour every frame to make each sample pay for the
+ * full warp pass, as a drag, a playing video or a blinking caret would.
  * The Control Panel can turn them back on.
  */
 function usePerformanceGuard(active: boolean) {
@@ -113,17 +117,27 @@ function usePerformanceGuard(active: boolean) {
     } catch {
       return;
     }
+    const screen = document.querySelector<HTMLElement>(".desktop-screen");
+    if (!screen) return;
+    const probe = document.createElement("div");
+    probe.setAttribute("aria-hidden", "true");
+    probe.style.cssText =
+      "position:absolute;left:0;top:0;width:1px;height:1px;pointer-events:none;";
     const samples: number[] = [];
     let last = 0;
     let frame = 0;
+    let tick = false;
 
     const loop = (time: number) => {
       if (last && !document.hidden) samples.push(time - last);
       last = time;
       if (samples.length < PERF_SAMPLES) {
+        tick = !tick;
+        probe.style.backgroundColor = tick ? "rgba(0, 0, 0, 0.01)" : "rgba(0, 0, 0, 0.02)";
         frame = requestAnimationFrame(loop);
         return;
       }
+      probe.remove();
       samples.sort((a, b) => a - b);
       const median = samples[samples.length >> 1];
       try {
@@ -139,11 +153,13 @@ function usePerformanceGuard(active: boolean) {
     };
     document.addEventListener("visibilitychange", onVisibility);
     const start = window.setTimeout(() => {
+      screen.appendChild(probe);
       frame = requestAnimationFrame(loop);
     }, 3000);
     return () => {
       window.clearTimeout(start);
       cancelAnimationFrame(frame);
+      probe.remove();
       document.removeEventListener("visibilitychange", onVisibility);
     };
   }, [active]);
@@ -235,8 +251,7 @@ export function CrtOverlay() {
       settings.enabled ? SCREEN_TONE : "",
     ].filter(Boolean);
     const root = document.documentElement;
-    root.style.setProperty("--crt-filter", filters.length ? filters.join(" ") : "none");
-  }, [warpReady, useRgb, settings.enabled]);
+    root.style.setProperty("--crt-filter", filters.length ? filters.join(" ") : "none");  }, [warpReady, useRgb, settings.enabled]);
 
   useEffect(() => {
     const canvas = linesRef.current;
@@ -317,7 +332,7 @@ export function CrtOverlay() {
           colorInterpolationFilters="sRGB"
         >
           <feImage
-            href={warpHref}
+            href={warpHref || undefined}
             x="0"
             y="0"
             width="1"
