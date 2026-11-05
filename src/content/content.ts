@@ -162,7 +162,7 @@ export const VFS: VfsNode[] = [
     url: "https://fob.is-np.its-plus.com/login",
     description: "Plataforma FOB - Classificadores.",
     embeddable: false,
-    preview: "/media/previews/fob-login.png",
+    preview: "/media/previews/fob-login.jpg",
   },
 
   { id: "dir-lixeira", kind: "folder", name: "Lixeira", parentId: null, icon: "/icons/recycle.svg" },

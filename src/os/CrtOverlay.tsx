@@ -10,7 +10,7 @@ import {
 } from "react";
 import { CrtCursor } from "@/os/CrtCursor";
 import { warpCoefficients, type WarpCoefficients } from "@/os/crtGeometry";
-import { useDisplaySettings } from "@/os/displaySettings";
+import { setDisplaySettings, useDisplaySettings } from "@/os/displaySettings";
 import { uiScale, viewportSize } from "@/os/scale";
 
 const LINE_SPACING = 5;
@@ -96,6 +96,59 @@ function warpMap(coefficients: WarpCoefficients): string {
   return canvas.toDataURL();
 }
 
+const PERF_KEY = "hesmos:perf-checked";
+const PERF_SAMPLES = 120;
+const PERF_MAX_MEDIAN_MS = 34;
+
+/**
+ * Runs once per browser: after the page settles it times ~120 frames and, if the
+ * median frame takes longer than ~30 fps allows, switches the heavy effects off.
+ * The Control Panel can turn them back on.
+ */
+function usePerformanceGuard(active: boolean) {
+  useEffect(() => {
+    if (!active) return;
+    try {
+      if (window.localStorage.getItem(PERF_KEY)) return;
+    } catch {
+      return;
+    }
+    const samples: number[] = [];
+    let last = 0;
+    let frame = 0;
+
+    const loop = (time: number) => {
+      if (last && !document.hidden) samples.push(time - last);
+      last = time;
+      if (samples.length < PERF_SAMPLES) {
+        frame = requestAnimationFrame(loop);
+        return;
+      }
+      samples.sort((a, b) => a - b);
+      const median = samples[samples.length >> 1];
+      try {
+        window.localStorage.setItem(PERF_KEY, "1");
+      } catch {
+        // Without storage the check just runs again next visit.
+      }
+      if (median > PERF_MAX_MEDIAN_MS) setDisplaySettings({ lite: true });
+    };
+
+    const onVisibility = () => {
+      last = 0;
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    const start = window.setTimeout(() => {
+      frame = requestAnimationFrame(loop);
+    }, 3000);
+    return () => {
+      window.clearTimeout(start);
+      cancelAnimationFrame(frame);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, [active]);
+}
+
 const COARSE_POINTER = "(pointer: coarse)";
 
 function isCoarsePointer(): boolean {
@@ -135,12 +188,14 @@ export function CrtOverlay() {
   const coefficients = useMemo(() => warpCoefficients(radius), [radius]);
   const curvature = coefficients.horizontal;
   const showLines = settings.enabled && settings.scanlines;
-  const showNoise = settings.enabled && settings.noise;
+  const lite = settings.lite;
+  const showNoise = settings.enabled && settings.noise && !lite;
+  usePerformanceGuard(settings.enabled && !lite);
   const rgbShift = (settings.rgbIntensity / 100) * MAX_RGB_SHIFT;
   const coarsePointer = useSyncExternalStore(subscribeCoarsePointer, isCoarsePointer, () => false);
   // Touch has no cursor to compensate the bent hit area, so keep the image flat there.
-  const useWarp = settings.enabled && settings.warp && !coarsePointer;
-  const useRgb = settings.enabled && settings.rgb && rgbShift > 0;
+  const useWarp = settings.enabled && settings.warp && !coarsePointer && !lite;
+  const useRgb = settings.enabled && settings.rgb && rgbShift > 0 && !lite;
 
   const [warpReadyFor, setWarpReadyFor] = useState<number | null>(null);
   const [warpHref, setWarpHref] = useState("");
@@ -322,7 +377,7 @@ export function CrtOverlay() {
           />
         ) : null}
         {showNoise ? <div ref={noiseRef} className="crt__noise" /> : null}
-        {settings.band ? <div className="crt__band" /> : null}
+        {settings.band && !lite ? <div className="crt__band" /> : null}
         {settings.vignette ? <div className="crt__vignette" /> : null}
         {settings.reflection ? <div className="crt__glass" /> : null}
       </div>

@@ -4,6 +4,8 @@ import { useSyncExternalStore } from "react";
 
 export type DisplaySettings = {
   enabled: boolean;
+  /** Drops the expensive effects (warp, RGB split, grain, band) for slow machines. */
+  lite: boolean;
   /** Faceplate radius of curvature in millimetres. */
   tubeRadius: number;
   warp: boolean;
@@ -25,6 +27,7 @@ export type DisplaySettings = {
 
 export const DEFAULT_DISPLAY_SETTINGS: DisplaySettings = {
   enabled: true,
+  lite: false,
   tubeRadius: 2000,
   warp: true,
   vignette: true,

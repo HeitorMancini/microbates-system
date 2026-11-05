@@ -172,6 +172,11 @@ export function ControlPanel({ win }: AppProps) {
               <MonitorPreview settings={settings} />
               <Group legend="Monitor">
                 <Checkbox label="Ativar efeitos de monitor CRT" setting="enabled" />
+                <Checkbox
+                  label="Modo desempenho (sem curvatura, aberração e grão)"
+                  setting="lite"
+                  disabled={off}
+                />
               </Group>
               <Group legend="Tubo de imagem">
                 <Slider
