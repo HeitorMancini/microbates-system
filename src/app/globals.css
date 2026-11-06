@@ -30,17 +30,225 @@ body {
   user-select: none;
 }
 
-/* Largest 4:3 screen that leaves an empty border of --screen-gap on every side. */
-.desktop {
+/*
+ * Monitor housing. .monitor has the size of the screen. While the system is on, the housing
+ * (screen plus bezel) is slightly taller than the viewport: about 4.5% of the screen width is
+ * cropped at the top and 2% at the bottom, which keeps the chin controls visible. --fit (set in
+ * DesktopShell) zooms the whole housing out when the system is off.
+ */
+.monitor {
   --screen-gap: 16px;
+  /* Housing is 1.2 screen widths wide and 1.0 tall, minus the cropped 0.065. */
+  --monitor-width: min(calc((100cqw - 2 * var(--screen-gap)) / 1.2), calc(100cqh / 0.935));
+  /* Heavy 17" CRT proportions: wide side bezel and a deep chin. */
+  --bezel: calc(var(--monitor-width) * 0.1);
+  --bezel-bottom: calc(var(--monitor-width) * 0.15);
+  --housing-offset: calc((var(--bezel-bottom) - var(--bezel)) / 2);
+  --lift: calc(var(--monitor-width) * 0.0375);
+  position: absolute;
+  top: calc(-1 * var(--lift));
+  bottom: var(--lift);
+  left: 0;
+  right: 0;
+  margin: auto;
+  width: var(--monitor-width);
+  height: calc(var(--monitor-width) * 3 / 4);
+  transform: scale(var(--fit, 1));
+  transform-origin: 50% calc(50% + var(--housing-offset));
+  transition: transform 2400ms cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.monitor--off {
+  transition-delay: 600ms;
+}
+
+.monitor__bezel {
+  position: absolute;
+  inset: calc(-1 * var(--bezel)) calc(-1 * var(--bezel)) calc(-1 * var(--bezel-bottom));
+  border-radius: calc(var(--monitor-width) * 0.012) calc(var(--monitor-width) * 0.012) calc(var(--monitor-width) * 0.008) calc(var(--monitor-width) * 0.008);
+  /* Matte beige plastic lit from the top right: hotspot, falloff towards the bottom left, fine grain. */
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' seed='5'/%3E%3CfeColorMatrix values='0 0 0 0 0.35  0 0 0 0 0.3  0 0 0 0 0.22  0 0 0 0.5 -0.12'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Cfilter id='m'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.004 0.02' numOctaves='3' seed='11'/%3E%3CfeColorMatrix values='0 0 0 0 0.3  0 0 0 0 0.26  0 0 0 0 0.18  0 0 0 0.9 -0.35'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23m)'/%3E%3C/svg%3E") 0 0 / 80% auto,
+    radial-gradient(ellipse 60% 55% at 95% 0%, rgba(255, 250, 232, 0.4), transparent 70%),
+    radial-gradient(ellipse 70% 60% at 0% 100%, rgba(0, 0, 0, 0.3), transparent 75%),
+    linear-gradient(225deg, #e3dcc7 0%, #c9c1ab 35%, #a39c85 68%, #7a735f 100%);
+  box-shadow:
+    inset calc(var(--monitor-width) * -0.003) calc(var(--monitor-width) * 0.003) 0 rgba(255, 255, 255, 0.8),
+    inset calc(var(--monitor-width) * 0.003) calc(var(--monitor-width) * -0.003) 0 rgba(50, 42, 28, 0.7),
+    inset calc(var(--monitor-width) * -0.016) calc(var(--monitor-width) * 0.016) calc(var(--monitor-width) * 0.03) calc(var(--monitor-width) * -0.01) rgba(255, 255, 255, 0.5),
+    inset calc(var(--monitor-width) * 0.02) calc(var(--monitor-width) * -0.02) calc(var(--monitor-width) * 0.04) calc(var(--monitor-width) * -0.012) rgba(40, 32, 18, 0.6),
+    calc(var(--monitor-width) * -0.03) calc(var(--monitor-width) * 0.045) calc(var(--monitor-width) * 0.07) rgba(0, 0, 0, 0.7),
+    calc(var(--monitor-width) * -0.006) calc(var(--monitor-width) * 0.008) calc(var(--monitor-width) * 0.01) rgba(0, 0, 0, 0.5);
+}
+
+/* Teal light spilling from the lit tube onto the plastic. */
+.monitor__bezel::after {
+  content: "";
   position: absolute;
   inset: 0;
-  margin: auto;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(ellipse 62% 54% at 50% 46%, rgba(30, 170, 160, 0.55), rgba(30, 150, 140, 0.2) 55%, transparent 80%);
+  mix-blend-mode: soft-light;
+  transition: opacity 1400ms;
+}
+
+.monitor--off .monitor__bezel::after {
+  opacity: 0;
+  transition-delay: 800ms;
+}
+
+/* Seam between the screen surround and the chin. */
+.monitor__bezel::before {
+  content: "";
+  position: absolute;
+  left: calc(var(--monitor-width) * 0.025);
+  right: calc(var(--monitor-width) * 0.025);
+  bottom: calc(var(--bezel-bottom) * 0.5);
+  height: calc(var(--monitor-width) * 0.003);
+  background: rgba(40, 32, 18, 0.5);
+  box-shadow: 0 calc(var(--monitor-width) * 0.0015) 0 rgba(255, 255, 255, 0.5);
+}
+
+.monitor__brand {
+  position: absolute;
+  left: calc(var(--monitor-width) * 0.035);
+  bottom: calc(var(--bezel-bottom) * 0.24);
+  color: #7a735f;
+  font-size: calc(var(--monitor-width) * 0.014);
+  letter-spacing: 0.2em;
+  text-shadow: -1px 1px 0 rgba(255, 255, 255, 0.55);
+}
+
+.monitor__controls {
+  position: absolute;
+  right: calc(var(--monitor-width) * 0.035);
+  bottom: calc(var(--bezel-bottom) * 0.22);
+  display: flex;
+  align-items: center;
+  gap: calc(var(--monitor-width) * 0.012);
+}
+
+.monitor__led {
+  width: calc(var(--monitor-width) * 0.008);
+  height: calc(var(--monitor-width) * 0.008);
+  border-radius: 50%;
+  background: #e0221b;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.35), 0 0 4px #e0221b;
+  transition: background-color 900ms, box-shadow 900ms;
+}
+
+.monitor__led--on {
+  background: #2fe03a;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.35), 0 0 4px #2fe03a;
+}
+
+.monitor__button {
+  box-sizing: border-box;
+  width: calc(var(--monitor-width) * 0.05);
+  min-width: 0;
+  height: calc(var(--monitor-width) * 0.022);
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 2px;
+  background: linear-gradient(225deg, #e0d9c5, #bdb59f 55%, #9a9380);
+  box-shadow:
+    inset -1px 1px 0 rgba(255, 255, 255, 0.8),
+    inset 1px -1px 0 rgba(60, 52, 36, 0.55),
+    -2px 3px 4px rgba(40, 32, 18, 0.55);
+  cursor: pointer;
+  transition: transform 450ms ease-out, box-shadow 450ms ease-out, background 450ms ease-out;
+}
+
+.monitor__button:active {
+  transform: translate(-1px, 1px);
+  background: linear-gradient(225deg, #aaa38e, #c3bba5);
+  box-shadow: inset 1px -1px 2px rgba(60, 52, 36, 0.6), -1px 1px 1px rgba(40, 32, 18, 0.4);
+  transition-duration: 120ms;
+}
+
+/* Sloped step between the bezel face and the black frame: the left and bottom faces catch the light. */
+.monitor__slope {
+  position: absolute;
+  inset: calc(var(--monitor-width) * -0.052);
+  border: calc(var(--monitor-width) * 0.04) solid;
+  border-color: rgba(40, 32, 18, 0.22) rgba(30, 24, 12, 0.32) rgba(255, 252, 240, 0.2) rgba(255, 252, 240, 0.28);
+  border-radius: calc(var(--monitor-width) * 0.014);
+  box-shadow:
+    0 0 calc(var(--monitor-width) * 0.012) rgba(0, 0, 0, 0.3),
+    inset 0 0 calc(var(--monitor-width) * 0.01) rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+}
+
+/* Black frame sunk into the bezel. Light from the top right: the top and right walls fall in shadow. */
+.monitor__rim {
+  position: absolute;
+  inset: calc(var(--monitor-width) * -0.012);
+  border-radius: calc(var(--monitor-width) * 0.008);
+  background: #0a0908;
+  box-shadow:
+    inset calc(var(--monitor-width) * -0.004) calc(var(--monitor-width) * 0.004) calc(var(--monitor-width) * 0.01) rgba(0, 0, 0, 0.9),
+    -1px 1px 0 rgba(255, 255, 255, 0.45),
+    1px -1px 0 rgba(50, 40, 25, 0.7);
+}
+
+.desktop {
+  position: absolute;
+  inset: 0;
   display: flex;
   flex-direction: column;
-  width: min(calc(100cqw - 2 * var(--screen-gap)), calc((100cqh - 2 * var(--screen-gap)) * 4 / 3));
-  height: min(calc((100cqw - 2 * var(--screen-gap)) * 3 / 4), calc(100cqh - 2 * var(--screen-gap)));
+  border-radius: calc(var(--monitor-width) * 0.01);
+  overflow: hidden;
   background: #000;
+}
+
+/* Glass in front of the tube, kept outside .desktop so it stays visible while the system is off. */
+.monitor__glass {
+  position: absolute;
+  inset: 0;
+  z-index: 100000;
+  pointer-events: none;
+  border-radius: calc(var(--monitor-width) * 0.01);
+  background:
+    radial-gradient(ellipse 55% 40% at 90% 6%, rgba(255, 255, 255, 0.13), transparent 70%),
+    linear-gradient(225deg, rgba(255, 255, 255, 0.05), transparent 45%, rgba(0, 0, 0, 0.22));
+  box-shadow:
+    inset 0 0 calc(var(--monitor-width) * 0.035) rgba(0, 0, 0, 0.55),
+    inset -6px 6px 14px rgba(0, 0, 0, 0.55),
+    inset 2px -2px 5px rgba(255, 255, 255, 0.06);
+}
+
+.monitor--off .monitor__glass {
+  background-color: #090b0a;
+  transition: background-color 300ms 1100ms;
+}
+
+/* The photo's bright area is a sub-rectangle of the frame; stretch it over the whole glass. */
+.monitor__reflection {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: url("/media/crt/reflection.jpg") 44% 24% / 133% 160% no-repeat;
+  mix-blend-mode: screen;
+  opacity: 0;
+}
+
+.monitor--off .monitor__reflection {
+  opacity: 0.45;
+  transition: opacity 1400ms 1200ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .monitor,
+  .monitor__glass,
+  .monitor__reflection,
+  .monitor__bezel::after,
+  .monitor__led,
+  .monitor__button {
+    transition: none !important;
+  }
 }
 
 :root[data-crt-cursor="on"] .desktop,
@@ -177,58 +385,11 @@ body {
 }
 
 .desktop--off {
-  animation: crt-power-off 700ms ease-in forwards;
+  animation: crt-power-off 1300ms ease-in forwards;
 }
 
 .desktop--warmup {
-  animation: crt-power-on 600ms ease-out;
-}
-
-.power-button {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transform: translate(-50%, -50%);
-  padding: 6px 14px;
-  background: transparent;
-  border: 1px solid #333;
-  border-radius: 16px;
-  box-shadow: none;
-  color: #666;
-  font: inherit;
-  font-size: 12px;
-  cursor: pointer;
-  animation: power-button-in 400ms 900ms both;
-}
-
-.power-button:hover,
-.power-button:focus-visible {
-  border-color: #666;
-  color: #aaa;
-  outline: none;
-}
-
-.power-button__icon {
-  position: relative;
-  width: 10px;
-  height: 10px;
-  border: 2px solid currentColor;
-  border-top-color: transparent;
-  border-radius: 50%;
-}
-
-.power-button__icon::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  top: -5px;
-  width: 2px;
-  height: 8px;
-  background: currentColor;
-  transform: translateX(-50%);
+  animation: crt-power-on 1300ms ease-out;
 }
 
 @keyframes power-line {
@@ -281,12 +442,6 @@ body {
   }
 }
 
-@keyframes power-button-in {
-  from {
-    opacity: 0;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .desktop--off {
     animation: none;
@@ -295,8 +450,7 @@ body {
 
   .desktop--warmup,
   .power-bios p,
-  .power-progress,
-  .power-button {
+  .power-progress {
     animation: none;
   }
 }
@@ -331,7 +485,7 @@ body {
     /* milky veil of the faceplate, brightest where the glass bulges */
     radial-gradient(ellipse 75% 70% at 48% 42%, rgba(175, 205, 185, 0.09), rgba(175, 205, 185, 0.04) 60%, transparent 90%),
     radial-gradient(ellipse 55% 35% at 28% 12%, rgba(255, 255, 255, 0.08), transparent 70%),
-    url("/media/crt/reflection.jpg") center / cover no-repeat;
+    url("/media/crt/reflection.jpg") 44% 24% / 133% 160% no-repeat;
   mix-blend-mode: screen;
   opacity: var(--crt-reflection-opacity, 0.35);
 }

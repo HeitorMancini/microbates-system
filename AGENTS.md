@@ -285,3 +285,9 @@ public/
   caixa por arraste, tooltips, animação de minimizar/maximizar, desligar/reiniciar/modo MS-DOS com
   efeito de tubo, BIOS e tela de abertura. Sistema renomeado de hesmOS para MicroSystem (empresa
   Microbates Company; assinatura "Microbates Company | Interactive & Creative Works" na BIOS).
+
+- **2026-11-06:** Moldura (gabinete cinza/bege) do monitor CRT: `.monitor` envolve `.desktop` (tela) e recebe `.monitor__bezel` (borda de 22 px, inferior 42 px com marca, LED verde/vermelho e botão retangular de energia) e `.monitor__rim`. A tela mantém a escala anterior e a moldura é cortada levemente em cima e embaixo. Com o sistema desligado (`phase === 'off'`), `DesktopShell` define `--fit` e o monitor inteiro dá zoom out com margem mínima de 24 px. O botão liga no estado desligado e abre Desligar no estado ligado. O dimensionamento da tela passou de `.desktop` para `.monitor`.
+
+- **2026-11-06 (2):** Moldura revisada a pedido do usuário: proporções de um CRT de 17" (borda lateral/superior 7,5% e queixo 12% da largura da tela), cantos menos arredondados, luz vinda do canto superior direito, textura de plástico e camada `.monitor__glass` (sombra interna, brilho e reflexo) por cima da tela. Com o sistema ligado a tela ficou ~15% menor que antes (a moldura grossa é cortada ~2,5% em cima e ~2% embaixo, mantendo os botões visíveis). O botão central "Ligar" foi removido: desligado, só o reflexo do vidro aparece e o botão da borda liga o sistema.
+
+- **2026-11-06 (3):** Moldura: bordas mais grossas (10% laterais/topo, 15% queixo da largura da tela; a tela ligada ficou um pouco menor, com ~4,5% de corte em cima e ~2% embaixo), degrau inclinado `.monitor__slope` entre a moldura e a borda preta, brilho azul-esverdeado da tela sobre o plástico (`.monitor__bezel::after`), quinas bem menos arredondadas, imagem de reflexo esticada para cobrir todo o vidro, e animações mais lentas (zoom 2,4 s, tubo 1,3 s, LED/botão de energia suavizados).

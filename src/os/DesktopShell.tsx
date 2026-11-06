@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { CrtOverlay } from "@/os/CrtOverlay";
 import { DesktopSurface } from "@/os/Desktop";
 import { PowerScreen, ShutDownProvider, type PowerPhase, type ShutdownMode } from "@/os/power";
@@ -23,28 +23,66 @@ function DesktopInner({ phase, mode, onPhase }: PowerProps) {
   }, [phase, mode, openApp]);
 
   const tube = phase === "off" ? " desktop--off" : phase === "boot" && mode === "shutdown" ? " desktop--warmup" : "";
+  const monitorRef = useRef<HTMLDivElement>(null);
+  const bezelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const monitor = monitorRef.current;
+    const bezel = bezelRef.current;
+    if (!monitor || !bezel) return;
+    if (phase !== "off") {
+      monitor.style.setProperty("--fit", "1");
+      return;
+    }
+    const margin = 24;
+    const fit = () => {
+      const { clientWidth, clientHeight } = document.body;
+      const scale = Math.min(
+        1,
+        (clientWidth - 2 * margin) / bezel.offsetWidth,
+        (clientHeight - 2 * margin) / bezel.offsetHeight,
+      );
+      monitor.style.setProperty("--fit", String(Math.max(scale, 0.1)));
+    };
+    fit();
+    window.addEventListener("resize", fit);
+    return () => window.removeEventListener("resize", fit);
+  }, [phase]);
 
   return (
     <>
-      <div className={`desktop${tube}`}>
-        <div className="desktop-screen">
-          <DesktopSurface>
-            {windows.map((win) => (
-              <WindowFrame key={win.id} win={win} />
-            ))}
-          </DesktopSurface>
-          <Taskbar />
-          <PopupLayer />
-          <PowerScreen phase={phase} mode={mode} onPhase={onPhase} />
+      <div ref={monitorRef} className={`monitor${phase === "off" ? " monitor--off" : ""}`}>
+        <div ref={bezelRef} className="monitor__bezel">
+          <span className="monitor__brand">MICROBATES</span>
+          <div className="monitor__controls">
+            <span className={`monitor__led${phase === "off" ? "" : " monitor__led--on"}`} aria-hidden="true" />
+            <button
+              type="button"
+              className="monitor__button"
+              aria-label={phase === "off" ? "Ligar o monitor" : "Desligar o MicroSystem"}
+              onClick={() => (phase === "off" ? onPhase("boot") : phase === "on" ? openApp("shutdown") : undefined)}
+            />
+          </div>
         </div>
-        <CrtOverlay />
+        <div className="monitor__slope" aria-hidden="true" />
+        <div className="monitor__rim" aria-hidden="true" />
+        <div className={`desktop${tube}`}>
+          <div className="desktop-screen">
+            <DesktopSurface>
+              {windows.map((win) => (
+                <WindowFrame key={win.id} win={win} />
+              ))}
+            </DesktopSurface>
+            <Taskbar />
+            <PopupLayer />
+            <PowerScreen phase={phase} mode={mode} onPhase={onPhase} />
+          </div>
+          <CrtOverlay />
+        </div>
+        <div className="monitor__glass" aria-hidden="true">
+          <div className="monitor__reflection" />
+        </div>
       </div>
-      {phase === "off" ? (
-        <button type="button" className="power-button" onClick={() => onPhase("boot")}>
-          <span className="power-button__icon" aria-hidden="true" />
-          Ligar
-        </button>
-      ) : null}
     </>
   );
 }
